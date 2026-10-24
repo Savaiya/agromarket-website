@@ -7,17 +7,23 @@ class Database
 
     private function __construct()
     {
-        if (AGROMARKET_MYSQL_HOST === '' || AGROMARKET_MYSQL_DATABASE === '' || AGROMARKET_MYSQL_USERNAME === '') {
+        $databaseConfig = $GLOBALS['config']['database'] ?? [];
+        $mysqlHost = $databaseConfig['host'] ?? '';
+        $mysqlDatabase = $databaseConfig['database'] ?? '';
+        $mysqlUsername = $databaseConfig['username'] ?? '';
+        $mysqlPassword = $databaseConfig['password'] ?? '';
+
+        if ($mysqlHost === '' || $mysqlDatabase === '' || $mysqlUsername === '') {
             throw new RuntimeException(
                 'Admin database configuration is missing. Set the AGROMARKET_MYSQL_HOST, AGROMARKET_MYSQL_DATABASE, and AGROMARKET_MYSQL_USERNAME settings.'
             );
         }
 
         try {
-            $dsn = 'mysql:host=' . AGROMARKET_MYSQL_HOST
-                . ';dbname=' . AGROMARKET_MYSQL_DATABASE
+            $dsn = 'mysql:host=' . $mysqlHost
+                . ';dbname=' . $mysqlDatabase
                 . ';charset=utf8mb4';
-            $this->connection = new PDO($dsn, AGROMARKET_MYSQL_USERNAME, AGROMARKET_MYSQL_PASSWORD, [
+            $this->connection = new PDO($dsn, $mysqlUsername, $mysqlPassword, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,

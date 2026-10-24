@@ -1,63 +1,16 @@
 <?php
-require_once __DIR__ . '/config.php';
-
-$error = '';
-$success = '';
-
-// If already logged in, redirect to dashboard
-if (isLoggedIn()) {
-    header('Location: ' . adminUrl('dashboard.php'));
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    requireValidCsrfToken();
-    $email = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    
-    if (empty($email) || empty($password)) {
-        $error = 'Please enter both email and password.';
-    } else {
-        try {
-            $db = getDB();
-            $statement = $db->prepare(
-                "SELECT id, name, email, password, role
-                 FROM admins
-                 WHERE email = :email AND status = 'active'
-                 LIMIT 1"
-            );
-            $statement->execute(['email' => $email]);
-            $admin = $statement->fetch();
-
-            if ($admin && password_verify($password, $admin['password'])) {
-                session_regenerate_id(true);
-                $_SESSION['admin_id'] = $admin['id'];
-                $_SESSION['admin_name'] = $admin['name'];
-                $_SESSION['admin_email'] = $admin['email'];
-                $_SESSION['admin_role'] = $admin['role'];
-                
-                // Update last login
-                $statement = $db->prepare('UPDATE admins SET last_login = UTC_TIMESTAMP() WHERE id = :id');
-                $statement->execute(['id' => $admin['id']]);
-                
-                header('Location: ' . adminUrl('dashboard.php'));
-                exit;
-            } else {
-                $error = 'Invalid email or password.';
-            }
-        } catch (RuntimeException $e) {
-            error_log('Admin MySQL login operation failed: ' . $e->getMessage());
-            $error = 'The admin database is unavailable or not configured. Please check the MySQL settings.';
-        }
-    }
-}
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/src/controller/LoginController.php';
+$loginData = (new LoginController())->handle();
+$error = $loginData['error'];
+$email = $loginData['email'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - <?php echo htmlspecialchars(ADMIN_SITE_NAME); ?></title>
+    <title>Login - <?php echo htmlspecialchars($adminSiteName); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>

@@ -1,8 +1,5 @@
 <?php
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/src/controller/LogoutController.php';
 
-session_unset();
-session_destroy();
-
-header('Location: ' . adminUrl('login.php'));
-exit;
+(new LogoutController())->handle();

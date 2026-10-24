@@ -1,33 +1,13 @@
 <?php
-require_once __DIR__ . '/config.php';
-requireLogin();
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/src/controller/DashboardController.php';
+
+$dashboardData = (new DashboardController())->handle();
+extract($dashboardData, EXTR_SKIP);
 
 $pageTitle = 'Dashboard';
 $activePage = 'dashboard';
 $useDataTables = true;
-
-// Get statistics
-try {
-    $db = getDB();
-    $leadStats = $db->query(
-        "SELECT COUNT(*) AS total, SUM(status = 'new') AS new_count,
-                SUM(status = 'converted') AS converted_count
-         FROM leads"
-    )->fetch();
-    $blogStats = $db->query(
-        "SELECT COUNT(*) AS total, SUM(status = 'published') AS published_count
-         FROM blogs"
-    )->fetch();
-    $totalLeads = ['count' => (int) $leadStats['total']];
-    $newLeads = ['count' => (int) $leadStats['new_count']];
-    $convertedLeads = ['count' => (int) $leadStats['converted_count']];
-    $totalBlogs = ['count' => (int) $blogStats['total']];
-    $publishedBlogs = ['count' => (int) $blogStats['published_count']];
-} catch (RuntimeException $e) {
-    error_log('Admin MySQL dashboard data could not be loaded: ' . $e->getMessage());
-    $errorMessage = 'Dashboard data could not be loaded. Check the MySQL configuration and tables.';
-    $totalLeads = $newLeads = $convertedLeads = $totalBlogs = $publishedBlogs = ['count' => 0];
-}
 
 ob_start();
 ?>
